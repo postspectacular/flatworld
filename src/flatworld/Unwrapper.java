@@ -13,7 +13,6 @@ import toxi.geom.mesh.Face;
 import toxi.geom.mesh.WEFace;
 import toxi.geom.mesh.WETriangleMesh;
 import toxi.geom.mesh.WingedEdge;
-import toxi.math.MathUtils;
 
 public class Unwrapper {
 
@@ -24,46 +23,16 @@ public class Unwrapper {
 
     protected EdgeRenderStrategy edgeStrategy;
 
-    private int maxSearchIterations = 100;
+    private UnwrapLayoutStrategy layout;
 
     public Unwrapper(int width, int height) {
-        this.sheetWidth = width;
-        this.sheetHeight = height;
+        this(width, height, new DefaultLayout());
     }
 
-    private boolean attemptToAddFaceToSheet(UnwrappedFace face,
-            List<UnwrapSheet> sheets) {
-        UnwrapSheet bestSheet = null;
-        Vec2D bestPos = null;
-        float bestTheta = 0;
-        float minDist = Float.MAX_VALUE;
-        face.setPosition(new Vec2D(), 0);
-        float faceArea = face.getArea();
-        boolean isPlaced = false;
-        for (UnwrapSheet sheet : sheets) {
-            if (sheet.getFreeArea() >= faceArea) {
-                for (int i = 0; i < maxSearchIterations; i++) {
-                    Vec2D pos = sheet.getRandomPos();
-                    float theta = MathUtils.random(MathUtils.TWO_PI);
-                    face.setPosition(pos, theta);
-                    if (sheet.isFacePlacable(face)) {
-                        float dist = getMinDistanceOnSheet(face, sheet);
-                        if (dist <= minDist) {
-                            bestSheet = sheet;
-                            bestPos = pos;
-                            bestTheta = theta;
-                            minDist = dist;
-                        }
-                    }
-                }
-            }
-        }
-        if (bestSheet != null) {
-            face.setPosition(bestPos, bestTheta);
-            bestSheet.add(face);
-            isPlaced = true;
-        }
-        return isPlaced;
+    public Unwrapper(int width, int height, UnwrapLayoutStrategy layout) {
+        this.sheetWidth = width;
+        this.sheetHeight = height;
+        this.layout = layout;
     }
 
     private UnwrapEdge getEdgeFor(WEFace f, Vec3D v, Vec3D w) {
@@ -88,24 +57,6 @@ public class Unwrapper {
         return edgeStrategy;
     }
 
-    /**
-     * @return the maxSearchIterations
-     */
-    public int getMaxSearchIterations() {
-        return maxSearchIterations;
-    }
-
-    private float getMinDistanceOnSheet(UnwrappedFace face, UnwrapSheet sheet) {
-        float minDist = Float.MAX_VALUE;
-        for (UnwrappedFace f : sheet.faces) {
-            float d = face.sheetPos.distanceToSquared(f.sheetPos);
-            if (d < minDist) {
-                minDist = d;
-            }
-        }
-        return minDist;
-    }
-
     public List<UnwrapSheet> getSheets() {
         return sheets;
     }
@@ -116,14 +67,6 @@ public class Unwrapper {
      */
     public void setEdgeStrategy(EdgeRenderStrategy edgeStrategy) {
         this.edgeStrategy = edgeStrategy;
-    }
-
-    /**
-     * @param maxSearchIterations
-     *            the maxSearchIterations to set
-     */
-    public void setMaxSearchIterations(int maxSearchIterations) {
-        this.maxSearchIterations = maxSearchIterations;
     }
 
     public void unwrapMesh(WETriangleMesh mesh, float scale) {
@@ -157,10 +100,10 @@ public class Unwrapper {
             UnwrapEdge eca = getEdgeFor(ff, fc, fa);
             UnwrappedFace face =
                     new UnwrappedFace(tri, id++, scale, eab, ebc, eca);
-            boolean isPlaced = attemptToAddFaceToSheet(face, sheets);
+            boolean isPlaced = layout.placeFace(face, sheets);
             if (!isPlaced) {
                 UnwrapSheet sheet = new UnwrapSheet(sheetWidth, sheetHeight);
-                attemptToAddFaceToSheet(face, Collections.singletonList(sheet));
+                layout.placeFace(face, Collections.singletonList(sheet));
                 sheets.add(sheet);
             }
         }
