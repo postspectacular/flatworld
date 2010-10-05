@@ -30,6 +30,8 @@ public class UnwrappedFace {
 
     private float area;
 
+    private float minOffset = 2;
+
     public UnwrappedFace(Triangle2D t, int id, float scale, UnwrapEdge eab,
             UnwrapEdge ebc, UnwrapEdge eca) {
         this.origTri = t;
@@ -66,7 +68,7 @@ public class UnwrappedFace {
     }
 
     public Rect getBounds() {
-        return tri.getBounds();
+        return collTri.getBounds();
     }
 
     public boolean intersectsFace(UnwrappedFace f) {
@@ -83,7 +85,7 @@ public class UnwrappedFace {
         // if (collTri.isClockwise()) {
         // collTri.flipVertexOrder();
         // }
-        collTri.adjustTriangleSizeBy(edgeAB.getOffset(), edgeBC.getOffset(),
-                edgeCA.getOffset());
+        collTri.adjustTriangleSizeBy(edgeAB.getOffset() + minOffset,
+                edgeBC.getOffset() + minOffset, edgeCA.getOffset() + minOffset);
     }
 }

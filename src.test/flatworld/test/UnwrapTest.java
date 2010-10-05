@@ -4,13 +4,14 @@ import java.util.Iterator;
 
 import processing.core.PApplet;
 import processing.pdf.PGraphicsPDF;
-import toxi.geom.AABB;
-import toxi.geom.Plane;
+import toxi.geom.Sphere;
 import toxi.geom.mesh.WETriangleMesh;
 import toxi.math.conversion.UnitTranslator;
 import toxi.util.DateUtils;
 import flatworld.EdgeRenderStrategy;
 import flatworld.GlueTabEdgeStrategy;
+import flatworld.HoleMountStrategy;
+import flatworld.PackedLayout;
 import flatworld.UnwrapSheet;
 import flatworld.Unwrapper;
 
@@ -43,7 +44,7 @@ public class UnwrapTest extends PApplet {
         if (pdfPath != null) {
             for (Iterator<UnwrapSheet> i = unwrap.getSheets().iterator(); i
                     .hasNext();) {
-                i.next().draw(pdf, useLabels);
+                i.next().draw(pdf, true, useLabels);
                 if (i.hasNext()) {
                     pdf.nextPage();
                 }
@@ -52,7 +53,7 @@ public class UnwrapTest extends PApplet {
             pdfPath = null;
             println("done...");
         } else {
-            unwrap.getSheets().get(currSheetID).draw(g, useLabels);
+            unwrap.getSheets().get(currSheetID).draw(g, true, useLabels);
         }
     }
 
@@ -76,12 +77,14 @@ public class UnwrapTest extends PApplet {
 
     private void reset() {
         WETriangleMesh mesh;
-        mesh = new WETriangleMesh().addMesh(new Plane().toMesh(200));
-        // mesh = new WETriangleMesh().addMesh(new Sphere(300).toMesh(5));
-        mesh = new WETriangleMesh().addMesh(new AABB(100).toMesh());
+        // mesh = new WETriangleMesh().addMesh(new Plane().toMesh(200));
+        mesh = new WETriangleMesh().addMesh(new Sphere(200).toMesh(5));
+        // mesh = new WETriangleMesh().addMesh(new AABB(100).toMesh());
         println(mesh);
         unwrap = new Unwrapper(width, height);
-        unwrap.unwrapMesh(mesh, 1, edgeStrategy);
+        unwrap.setLayout(new PackedLayout());
+        unwrap.setEdgeStrategy(edgeStrategy);
+        unwrap.unwrapMesh(mesh, 1);
         currSheetID = 0;
     }
 
@@ -91,6 +94,8 @@ public class UnwrapTest extends PApplet {
         textFont(createFont("SansSerif", 9));
         textAlign(CENTER);
         edgeStrategy = new GlueTabEdgeStrategy(TAB_WIDTH, 0.1f);
+        edgeStrategy = new HoleMountStrategy(2, 8, 40);
+        edgeStrategy.setLabelInset(20);
         reset();
     }
 }

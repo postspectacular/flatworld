@@ -37,6 +37,10 @@ public class UnwrapSheet {
         }
     }
 
+    public Rect getBounds() {
+        return bounds;
+    }
+
     public float getFillRatio() {
         return usedArea / totalArea;
     }

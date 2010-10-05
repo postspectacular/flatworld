@@ -69,6 +69,10 @@ public class Unwrapper {
         this.edgeStrategy = edgeStrategy;
     }
 
+    public void setLayout(UnwrapLayoutStrategy layout) {
+        this.layout = layout;
+    }
+
     public void unwrapMesh(WETriangleMesh mesh, float scale) {
         sheets.clear();
         int id = 1;
