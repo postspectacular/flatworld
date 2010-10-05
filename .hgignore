@@ -1,0 +1,11 @@
+syntax: glob
+
+bin
+docs
+dist
+metrics
+
+.DS_Store
+
+*.pdf
+
