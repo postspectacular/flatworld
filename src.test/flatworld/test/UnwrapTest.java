@@ -5,6 +5,7 @@ import java.util.Iterator;
 import processing.core.PApplet;
 import processing.pdf.PGraphicsPDF;
 import toxi.geom.AABB;
+import toxi.geom.Plane;
 import toxi.geom.mesh.WETriangleMesh;
 import toxi.math.conversion.UnitTranslator;
 import toxi.util.DateUtils;
@@ -74,14 +75,13 @@ public class UnwrapTest extends PApplet {
     }
 
     private void reset() {
-        // WETriangleMesh mesh =
-        // new WETriangleMesh().addMesh(new Plane().toMesh(300));
-        // WETriangleMesh mesh =
-        // new WETriangleMesh().addMesh(new Sphere(300).toMesh(5));
-        WETriangleMesh mesh =
-                new WETriangleMesh().addMesh(new AABB(200).toMesh());
+        WETriangleMesh mesh;
+        mesh = new WETriangleMesh().addMesh(new Plane().toMesh(200));
+        // mesh = new WETriangleMesh().addMesh(new Sphere(300).toMesh(5));
+        mesh = new WETriangleMesh().addMesh(new AABB(100).toMesh());
+        println(mesh);
         unwrap = new Unwrapper(width, height);
-        unwrap.unwrapMesh(mesh, 0.5f, edgeStrategy);
+        unwrap.unwrapMesh(mesh, 1, edgeStrategy);
         currSheetID = 0;
     }
 

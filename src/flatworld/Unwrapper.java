@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import toxi.geom.Matrix4x4;
+import toxi.geom.Quaternion;
+import toxi.geom.Triangle2D;
 import toxi.geom.Vec2D;
+import toxi.geom.Vec3D;
 import toxi.geom.mesh.Face;
-import toxi.geom.mesh.Vertex;
 import toxi.geom.mesh.WEFace;
 import toxi.geom.mesh.WETriangleMesh;
 import toxi.geom.mesh.WingedEdge;
@@ -21,46 +24,11 @@ public class Unwrapper {
 
     protected EdgeRenderStrategy edgeStrategy;
 
-    private int maxSearchIterations=100;
+    private int maxSearchIterations = 100;
 
     public Unwrapper(int width, int height) {
         this.sheetWidth = width;
         this.sheetHeight = height;
-    }
-
-    public void unwrapMesh(WETriangleMesh mesh, float scale, EdgeRenderStrategy edgeStrategy) {
-        this.edgeStrategy=edgeStrategy;
-        sheets.clear();
-        int id = 1;
-        usedEdges = new int[mesh.edges.size()];
-        for (Face f : mesh.getFaces()) {
-            WEFace ff = (WEFace) f;
-            UnwrapEdge eab = getEdgeFor(ff, ff.a, ff.b);
-            UnwrapEdge ebc = getEdgeFor(ff, ff.b, ff.c);
-            UnwrapEdge eca = getEdgeFor(ff, ff.c, ff.a);
-            UnwrappedFace face =
-                    new UnwrappedFace(ff, id++, scale, eab, ebc, eca);
-            boolean isPlaced = attemptToAddFaceToSheet(face, sheets);
-            if (!isPlaced) {
-                UnwrapSheet sheet = new UnwrapSheet(sheetWidth, sheetHeight);
-                attemptToAddFaceToSheet(face, Collections.singletonList(sheet));
-                sheets.add(sheet);
-            }
-        }
-    }
-
-    private UnwrapEdge getEdgeFor(WEFace f, Vertex v, Vertex w) {
-        UnwrapEdge edge = null;
-        for (WingedEdge e : f.edges) {
-            if ((e.a == v && e.b == w) || (e.a == w && e.b == v)) {
-                if (e.faces.size() > 1) {
-                    usedEdges[e.id]++;
-                }
-                edge = new UnwrapEdge(e, usedEdges[e.id],edgeStrategy);
-                break;
-            }
-        }
-        return edge;
     }
 
     private boolean attemptToAddFaceToSheet(UnwrappedFace face,
@@ -98,6 +66,21 @@ public class Unwrapper {
         return isPlaced;
     }
 
+    private UnwrapEdge getEdgeFor(WEFace f, Vec3D v, Vec3D w) {
+        UnwrapEdge edge = null;
+        for (WingedEdge e : f.edges) {
+            if ((e.a.equals(v) && e.b.equals(w))
+                    || (e.a.equals(w) && e.b.equals(v))) {
+                if (e.faces.size() > 1) {
+                    usedEdges[e.id]++;
+                }
+                edge = new UnwrapEdge(e.id, usedEdges[e.id], edgeStrategy);
+                break;
+            }
+        }
+        return edge;
+    }
+
     private float getMinDistanceOnSheet(UnwrappedFace face, UnwrapSheet sheet) {
         float minDist = Float.MAX_VALUE;
         for (UnwrappedFace f : sheet.faces) {
@@ -111,5 +94,45 @@ public class Unwrapper {
 
     public List<UnwrapSheet> getSheets() {
         return sheets;
+    }
+
+    public void unwrapMesh(WETriangleMesh mesh, float scale,
+            EdgeRenderStrategy edgeStrategy) {
+        this.edgeStrategy = edgeStrategy;
+        sheets.clear();
+        int id = 1;
+        usedEdges = new int[mesh.edges.size()];
+        Matrix4x4 matrix = new Matrix4x4();
+        for (Face f : mesh.getFaces()) {
+            WEFace ff = (WEFace) f;
+            Quaternion.getAlignmentQuat(Vec3D.Z_AXIS, f.normal).toMatrix4x4(
+                    matrix);
+            matrix.scaleSelf(scale);
+            Vec3D centroid = f.getCentroid();
+            Vec3D fa = f.a;
+            Vec3D fb = f.b;
+            Vec3D fc = f.c;
+            Vec2D aa = matrix.applyToSelf(fa.sub(centroid)).to2DXY();
+            Vec2D bb = matrix.applyToSelf(fb.sub(centroid)).to2DXY();
+            Vec2D cc = matrix.applyToSelf(fc.sub(centroid)).to2DXY();
+            Triangle2D tri = new Triangle2D(aa, bb, cc);
+            if (tri.isClockwise()) {
+                tri.flipVertexOrder();
+                Vec3D t = fa;
+                fa = fc;
+                fc = t;
+            }
+            UnwrapEdge eab = getEdgeFor(ff, fa, fb);
+            UnwrapEdge ebc = getEdgeFor(ff, fb, fc);
+            UnwrapEdge eca = getEdgeFor(ff, fc, fa);
+            UnwrappedFace face =
+                    new UnwrappedFace(tri, id++, scale, eab, ebc, eca);
+            boolean isPlaced = attemptToAddFaceToSheet(face, sheets);
+            if (!isPlaced) {
+                UnwrapSheet sheet = new UnwrapSheet(sheetWidth, sheetHeight);
+                attemptToAddFaceToSheet(face, Collections.singletonList(sheet));
+                sheets.add(sheet);
+            }
+        }
     }
 }
