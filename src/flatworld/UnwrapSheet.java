@@ -12,25 +12,37 @@ public class UnwrapSheet {
 
     protected Rect bounds;
 
-    public UnwrapSheet(int w, int h) {
-        this.bounds = new Rect(bleed, bleed, w-2*bleed, h-2*bleed);
-        this.totalArea = w * h;
-    }
-
     protected List<UnwrappedFace> faces = new ArrayList<UnwrappedFace>();
 
     protected float usedArea;
-    protected float totalArea;
 
-    protected float bleed=10;
+    protected float totalArea;
+    protected float bleed = 10;
+
     protected float faceBleed = 20;
 
-    public float getFreeArea() {
-        return totalArea - usedArea;
+    public UnwrapSheet(int w, int h) {
+        this.bounds = new Rect(bleed, bleed, w - 2 * bleed, h - 2 * bleed);
+        this.totalArea = w * h;
+    }
+
+    public void add(UnwrappedFace face) {
+        faces.add(face);
+        usedArea += face.getArea();
+    }
+
+    public void draw(PGraphics g, boolean showFaceLabels, boolean showEdgeLabels) {
+        for (UnwrappedFace f : faces) {
+            f.draw(g, showFaceLabels, showEdgeLabels);
+        }
     }
 
     public float getFillRatio() {
         return usedArea / totalArea;
+    }
+
+    public float getFreeArea() {
+        return totalArea - usedArea;
     }
 
     public Vec2D getRandomPos() {
@@ -43,23 +55,13 @@ public class UnwrapSheet {
         if (bounds.containsPoint(b.getTopLeft())
                 && bounds.containsPoint(b.getBottomRight())) {
             for (UnwrappedFace f : faces) {
-                if (f.intersectsFace(face))
+                if (f.intersectsFace(face)) {
                     return false;
+                }
             }
             return true;
         } else {
             return false;
-        }
-    }
-
-    public void add(UnwrappedFace face) {
-        faces.add(face);
-        usedArea += face.getArea();
-    }
-
-    public void draw(PGraphics g, boolean useLabels) {
-        for (UnwrappedFace f : faces) {
-            f.draw(g,useLabels);
         }
     }
 }

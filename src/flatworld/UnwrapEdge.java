@@ -25,7 +25,7 @@ public class UnwrapEdge {
     }
 
     public float getOffset() {
-        return strategy.getWidthForEdge(this);
+        return strategy.getOffsetWidthForEdge(this);
     }
 
     public int getUseCount() {

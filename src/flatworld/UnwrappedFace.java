@@ -40,10 +40,18 @@ public class UnwrappedFace {
         area = origTri.getArea();
     }
 
-    public void draw(PGraphics g, boolean useLabels) {
-        edgeAB.draw(g, this, tri.a, tri.b, useLabels);
-        edgeBC.draw(g, this, tri.b, tri.c, useLabels);
-        edgeCA.draw(g, this, tri.c, tri.a, useLabels);
+    public void draw(PGraphics g, boolean showFaceLabels, boolean showEdgeLabels) {
+        edgeAB.draw(g, this, tri.a, tri.b, showEdgeLabels);
+        edgeBC.draw(g, this, tri.b, tri.c, showEdgeLabels);
+        edgeCA.draw(g, this, tri.c, tri.a, showEdgeLabels);
+        // drawCollisionTriangle(g);
+        if (showFaceLabels) {
+            g.fill(0);
+            g.text(id, sheetPos.x, sheetPos.y);
+        }
+    }
+
+    private void drawCollisionTriangle(PGraphics g) {
         g.stroke(255, 0, 0);
         g.noFill();
         g.beginShape(PConstants.TRIANGLES);
@@ -51,10 +59,6 @@ public class UnwrappedFace {
         g.vertex(collTri.b.x, collTri.b.y);
         g.vertex(collTri.c.x, collTri.c.y);
         g.endShape();
-        if (useLabels) {
-            g.fill(0);
-            g.text(id, sheetPos.x, sheetPos.y);
-        }
     }
 
     public float getArea() {

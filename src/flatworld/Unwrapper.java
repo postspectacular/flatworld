@@ -81,6 +81,20 @@ public class Unwrapper {
         return edge;
     }
 
+    /**
+     * @return the edgeStrategy
+     */
+    public EdgeRenderStrategy getEdgeStrategy() {
+        return edgeStrategy;
+    }
+
+    /**
+     * @return the maxSearchIterations
+     */
+    public int getMaxSearchIterations() {
+        return maxSearchIterations;
+    }
+
     private float getMinDistanceOnSheet(UnwrappedFace face, UnwrapSheet sheet) {
         float minDist = Float.MAX_VALUE;
         for (UnwrappedFace f : sheet.faces) {
@@ -96,9 +110,23 @@ public class Unwrapper {
         return sheets;
     }
 
-    public void unwrapMesh(WETriangleMesh mesh, float scale,
-            EdgeRenderStrategy edgeStrategy) {
+    /**
+     * @param edgeStrategy
+     *            the edgeStrategy to set
+     */
+    public void setEdgeStrategy(EdgeRenderStrategy edgeStrategy) {
         this.edgeStrategy = edgeStrategy;
+    }
+
+    /**
+     * @param maxSearchIterations
+     *            the maxSearchIterations to set
+     */
+    public void setMaxSearchIterations(int maxSearchIterations) {
+        this.maxSearchIterations = maxSearchIterations;
+    }
+
+    public void unwrapMesh(WETriangleMesh mesh, float scale) {
         sheets.clear();
         int id = 1;
         usedEdges = new int[mesh.edges.size()];
@@ -116,6 +144,8 @@ public class Unwrapper {
             Vec2D bb = matrix.applyToSelf(fb.sub(centroid)).to2DXY();
             Vec2D cc = matrix.applyToSelf(fc.sub(centroid)).to2DXY();
             Triangle2D tri = new Triangle2D(aa, bb, cc);
+            // 2d triangle needs to be anti-clockwise for area & intersection
+            // tests
             if (tri.isClockwise()) {
                 tri.flipVertexOrder();
                 Vec3D t = fa;

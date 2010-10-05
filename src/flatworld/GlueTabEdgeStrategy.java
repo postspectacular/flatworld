@@ -1,6 +1,8 @@
 package flatworld;
 
 import processing.core.PGraphics;
+import toxi.color.NamedColor;
+import toxi.color.ReadonlyTColor;
 import toxi.geom.Line2D;
 import toxi.geom.Vec2D;
 
@@ -8,6 +10,8 @@ public class GlueTabEdgeStrategy extends EdgeRenderStrategy {
 
     public float width;
     public float insetPos;
+
+    public ReadonlyTColor tabColor = NamedColor.GRAY;
 
     public GlueTabEdgeStrategy(int w, float inset) {
         this.width = w;
@@ -22,10 +26,10 @@ public class GlueTabEdgeStrategy extends EdgeRenderStrategy {
         if (m.sub(face.sheetPos).dot(n) < 0) {
             n.invert();
         }
-        g.stroke(0);
         if (1 == edge.getUseCount() % 2) {
             Vec2D off = n.normalizeTo(width);
             g.noFill();
+            g.stroke(tabColor.toARGB());
             g.beginShape();
             g.vertex(a.x, a.y);
             Vec2D aa = a.interpolateTo(b, insetPos);
@@ -35,16 +39,61 @@ public class GlueTabEdgeStrategy extends EdgeRenderStrategy {
             g.vertex(b.x, b.y);
             g.endShape();
         }
+        g.stroke(edgeColor.toARGB());
         g.line(a.x, a.y, b.x, b.y);
         if (useLabels) {
-            m.subSelf(n.normalizeTo(8));
-            drawLabel(g, edge, m);
+            drawLabel(g, face, edge, a, b);
         }
     }
 
+    /**
+     * @return the insetPos
+     */
+    public float getInsetPos() {
+        return insetPos;
+    }
+
     @Override
-    public float getWidthForEdge(UnwrapEdge edge) {
+    public float getOffsetWidthForEdge(UnwrapEdge edge) {
         return 1 == edge.getUseCount() % 2 ? width : 0;
+    }
+
+    /**
+     * @return the tabColor
+     */
+    public ReadonlyTColor getTabColor() {
+        return tabColor;
+    }
+
+    /**
+     * @return the width
+     */
+    public float getWidth() {
+        return width;
+    }
+
+    /**
+     * @param insetPos
+     *            the insetPos to set
+     */
+    public void setInsetPos(float insetPos) {
+        this.insetPos = insetPos;
+    }
+
+    /**
+     * @param tabColor
+     *            the tabColor to set
+     */
+    public void setTabColor(ReadonlyTColor tabColor) {
+        this.tabColor = tabColor;
+    }
+
+    /**
+     * @param width
+     *            the width to set
+     */
+    public void setWidth(float width) {
+        this.width = width;
     }
 
 }
